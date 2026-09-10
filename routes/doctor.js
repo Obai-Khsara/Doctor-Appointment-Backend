@@ -92,7 +92,7 @@ router.get("/count", async (req, res) => {
         if (cachedData) {
             return res.status(200).json({
                 message: "Doctors count fetched successfully (from cache)",
-                doctors: cachedData
+                count: cachedData
             })
         }
 
