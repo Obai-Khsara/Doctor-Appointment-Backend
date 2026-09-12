@@ -4,21 +4,12 @@ const Department = require("../models/DepartmentsSchema.js")
 const multer = require("multer")
 const auth = require("../auth/Middleware.js")
 const redisClient = require("../config/redisClient.js")
-const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const cloudinary = require("../config/cloudinary.js")
 const uploadToSupabase = require("../utils/uploadToSupabase.js")
 
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
-// const storage = new CloudinaryStorage({
-//     cloudinary: cloudinary,
-//     params: {
-//         folder: "departments",
-//         allowed_formats: ["jpg", "jpeg", "png", "webp"],
-//     },
-// })
-// const upload = multer({ storage: storage })
+
 
 
 
@@ -26,8 +17,6 @@ const upload = multer({ storage: storage })
 router.post("/", auth("admin"), upload.single("image"), async (req, res) => {
     try {
         const { name, description } = req.body
-        // const image = req.file ? req.file.filename : null
-        // const image = req.file ? req.file.path : null
         let imageUrl = null
         if (req.file) {
             imageUrl = await uploadToSupabase(req.file)
@@ -42,7 +31,6 @@ router.post("/", auth("admin"), upload.single("image"), async (req, res) => {
         const department = await Department.create({
             name,
             description,
-            // image: req.file?.filename
             image: imageUrl
         })
 

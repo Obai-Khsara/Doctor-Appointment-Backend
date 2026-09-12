@@ -16,9 +16,6 @@ router.post("/register", rateLimit(authRateLimiter), validate(registerSchema), a
     try {
         const { name, email, password, role = "user" } = req.body
 
-        // if (!name || !email || !password) {
-        //     return res.status(400).json({ message: "All fields are required" })
-        // }
 
         const userExist = await User.findOne({ email })
         if (userExist) {
@@ -60,9 +57,7 @@ router.post("/signin", rateLimit(authRateLimiter), validate(signinSchema), async
     try {
         const { email, password } = req.body
 
-        // if (!email || !password) {
-        //     return res.status(400).json({ message: "Credientials are required" })
-        // }
+
 
         const user = await User.findOne({ email })
         if (!user) {
