@@ -6,30 +6,20 @@ const auth = require("../auth/Middleware.js")
 const redisClient = require("../config/redisClient.js")
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const cloudinary = require("../config/cloudinary.js")
+const uploadToSupabase = require("../utils/uploadToSupabase.js")
 
 
-
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: "departments",
-        allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    },
-})
+const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
-
-
-// const storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, './uploads')
+// const storage = new CloudinaryStorage({
+//     cloudinary: cloudinary,
+//     params: {
+//         folder: "departments",
+//         allowed_formats: ["jpg", "jpeg", "png", "webp"],
 //     },
-//     filename: function (req, file, cb) {
-//         const ext = path.extname(file.originalname)
-//         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-//         cb(null, file.fieldname + '-' + uniqueSuffix + ext)
-//     }
 // })
 // const upload = multer({ storage: storage })
+
 
 
 //Create New Department
@@ -37,7 +27,11 @@ router.post("/", auth("admin"), upload.single("image"), async (req, res) => {
     try {
         const { name, description } = req.body
         // const image = req.file ? req.file.filename : null
-        const image = req.file ? req.file.path : null
+        // const image = req.file ? req.file.path : null
+        let imageUrl = null
+        if (req.file) {
+            imageUrl = await uploadToSupabase(req.file)
+        }
 
         if (!name) {
             return res.status(400).json({
@@ -49,7 +43,7 @@ router.post("/", auth("admin"), upload.single("image"), async (req, res) => {
             name,
             description,
             // image: req.file?.filename
-            image: req.file?.path
+            image: imageUrl
         })
 
         await redisClient.del("departments:all")

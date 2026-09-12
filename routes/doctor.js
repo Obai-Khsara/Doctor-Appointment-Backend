@@ -5,26 +5,34 @@ const multer = require("multer")
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const cloudinary = require("../config/cloudinary.js")
 const redisClient = require("../config/redisClient.js")
+const uploadToSupabase = require("../utils/uploadToSupabase.js")
 
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: "doctors",
-        allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    },
-})
-
+const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
+// const storage = new CloudinaryStorage({
+//     cloudinary: cloudinary,
+//     params: {
+//         folder: "doctors",
+//         allowed_formats: ["jpg", "jpeg", "png", "webp"],
+//     },
+// })
+
+// const upload = multer({ storage: storage })
 
 // Create New Doctor
 router.post("/", upload.single("image"), async (req, res) => {
     try {
         const { name, speciality, description, experienceYears } = req.body
-        const image = req.file ? req.file.path : null
+        // const image = req.file ? req.file.path : null
+
+        let imageUrl = null
+        if (req.file) {
+            imageUrl = await uploadToSupabase(req.file)
+        }
 
 
-        if (!name || !speciality || !description || !experienceYears || !image) {
+        if (!name || !speciality || !description || !experienceYears || !imageUrl) {
             return res.status(400).json({ message: "All fields are required" })
         }
 
@@ -33,7 +41,7 @@ router.post("/", upload.single("image"), async (req, res) => {
             speciality,
             description,
             experienceYears,
-            image: req.file?.path
+            image: imageUrl
         })
 
         await redisClient.del("doctors:all")
